@@ -1,0 +1,31 @@
+load("//third_party/com_github_robotlocomotion_drake:tools/workspace/cpplint.bzl", "cpplint")
+load("//third_party/com_github_robotlocomotion_drake:tools/workspace/python_lint.bzl", "python_lint")
+load("//tools:dreal.bzl", "dreal_cc_googlebenchmark")
+
+package(default_visibility = ["//visibility:private"])
+
+# -----
+# Benchmark
+# -----
+dreal_cc_googlebenchmark(
+    name = "benchmark",
+    srcs = glob([
+        "**/*.cc",
+        "**/*.hh",
+    ]),
+    data = glob([
+        "smt2/*.smt2",
+    ]) + ["benchmark.conf"],
+    use_default_main = False,
+    deps = [
+        "//dreal:main_program",
+    ],
+)
+
+cpplint()
+
+python_lint()
+
+licenses(["notice"])  # Apache 2.0
+
+exports_files(["LICENSE"])
