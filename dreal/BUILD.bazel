@@ -18,10 +18,10 @@ genrule(
         "version.h",
     ],
     cmd = "$(location //tools:generate_version_header) %s > $@" % DREAL_VERSION,
+    stamp = True,
     tools = [
         "//tools:generate_version_header",
     ],
-    stamp = True,
 )
 
 dreal_cc_library(
@@ -75,19 +75,25 @@ dreal_cc_library(
         "//visibility:public",
     ],
     deps = [
-        "@linux_libs//:gmpxx",
         "@fmt",
+        "@linux_libs//:gmpxx",
     ],
 )
 
-dreal_cc_binary(
-    name = "dreal",
+dreal_cc_library(
+    name = "main_program",
     srcs = [
-        "dreal_main.cc",
-        "dreal_main.h",
+        "main_program.cc",
+        "main_program.h",
     ],
-    copts = ["-frounding-math", "-Wno-unknown-pragmas"],
-    linkopts = ["-Wl,--enable-new-dtags", "-Wl,-rpath='$$ORIGIN/../lib'"],
+    copts = [
+        "-frounding-math",
+        "-Wno-unknown-pragmas",
+    ],
+    linkopts = [
+        "-Wl,--enable-new-dtags",
+        "-Wl,-rpath='$$ORIGIN/../lib'",
+    ],
     local_defines = select({
         "//:soplex-enabled": ["HAVE_SOPLEX=1"],
         "//conditions:default": ["HAVE_SOPLEX=0"],
@@ -95,6 +101,7 @@ dreal_cc_binary(
     visibility = [
         #"//dreal/test/dr:__subpackages__",
         "//dreal/test/smt2:__subpackages__",
+        "//benchmark:__subpackages__",
     ],
     deps = [
         #"//dreal/dr",
@@ -113,123 +120,19 @@ dreal_cc_binary(
     }),
 )
 
-# ----------------------
-# Bindings
-# ----------------------
-#dreal_pybind_library(
-#    name = "dreal_py",
-#    cc_srcs = ["dreal_py.cc"],
-#    py_srcs = ["__init__.py"],
-#)
-#
-#dreal_py_test(
-#    name = "api_test_py",
-#    srcs = [
-#        "test/python/api_test.py",
-#    ],
-#    main = "test/python/api_test.py",
-#    tags = [
-#        "no_asan",
-#        "no_lsan",
-#        "no_tsan",
-#        "no_ubsan",
-#    ],
-#    deps = [
-#        ":dreal_py",
-#    ],
-#)
-#
-## To test ODR (one definition rule).
-#dreal_pybind_library(
-#    name = "odr_test_module_py",
-#    cc_srcs = ["odr_test_module_py.cc"],
-#)
-#
-#dreal_py_test(
-#    name = "odr_test_py",
-#    srcs = [
-#        "test/python/odr_test.py",
-#    ],
-#    main = "test/python/odr_test.py",
-#    tags = [
-#        "no_asan",
-#        "no_lsan",
-#        "no_tsan",
-#        "no_ubsan",
-#    ],
-#    deps = [
-#        ":dreal_py",
-#        ":odr_test_module_py",
-#    ],
-#)
-#
-#dreal_py_test(
-#    name = "util_test_py",
-#    srcs = [
-#        "test/python/util_test.py",
-#    ],
-#    main = "test/python/util_test.py",
-#    tags = [
-#        "no_asan",
-#        "no_lsan",
-#        "no_tsan",
-#        "no_ubsan",
-#    ],
-#    deps = [
-#        ":dreal_py",
-#    ],
-#)
-#
-#dreal_py_test(
-#    name = "symbolic_test_py",
-#    srcs = [
-#        "test/python/symbolic_test.py",
-#    ],
-#    main = "test/python/symbolic_test.py",
-#    tags = [
-#        "no_asan",
-#        "no_lsan",
-#        "no_tsan",
-#        "no_ubsan",
-#    ],
-#    deps = [
-#        ":dreal_py",
-#    ],
-#)
-#
-#dreal_py_test(
-#    name = "solver_test_py",
-#    srcs = [
-#        "test/python/solver_test.py",
-#    ],
-#    main = "test/python/solver_test.py",
-#    tags = [
-#        "no_asan",
-#        "no_lsan",
-#        "no_tsan",
-#        "no_ubsan",
-#    ],
-#    deps = [
-#        ":dreal_py",
-#    ],
-#)
-#
-#dreal_py_test(
-#    name = "smt2_test_py",
-#    srcs = [
-#        "test/python/smt2_test.py",
-#    ],
-#    main = "test/python/smt2_test.py",
-#    tags = [
-#        "no_asan",
-#        "no_lsan",
-#        "no_tsan",
-#        "no_ubsan",
-#    ],
-#    deps = [
-#        ":dreal_py",
-#    ],
-#)
+dreal_cc_binary(
+    name = "dreal",
+    srcs = [
+        "dreal_main.cc",
+    ],
+    visibility = [
+        #"//dreal/test/dr:__subpackages__",
+        "//dreal/test/smt2:__subpackages__",
+    ],
+    deps = [
+        "//dreal:main_program",
+    ],
+)
 
 # ----------------------
 # Header files to expose
@@ -238,9 +141,9 @@ filegroup(
     name = "headers",
     srcs = [
         "dreal.h",
-        "version.h",
         "gmp.h",
         "qsopt_ex.h",
+        "version.h",
     ],
     visibility = ["//visibility:public"],
 )
