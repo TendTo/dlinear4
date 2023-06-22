@@ -4,8 +4,12 @@ import json
 import csv
 import sys
 import re
-import z3
 from typing import TYPE_CHECKING
+
+try:
+    import z3
+except ImportError:
+    print("z3 not installed, skipping parsing of smt2 files")
 
 if TYPE_CHECKING:
     from typing import TypedDict, Literal
@@ -66,6 +70,8 @@ class BenchmarkParser:
             writer.writerows(self.benchmark_rows)
 
     def parse_smt2_files(self, file: "str") -> "int":
+        if "z3" not in sys.modules:
+            return -1
         file = file if self.smt2_folder == "" else f"{self.smt2_folder}/{file}"
         formula = z3.parse_smt2_file(file)
         s = z3.Solver()
@@ -99,7 +105,7 @@ class BenchmarkParser:
                     "timeUnit": benchmark["time_unit"],
                     "iterations": benchmark["iterations"],
                     "result": "sat" if result.startswith("delta-sat") else "unsat",
-                    "delta": delta
+                    "delta": delta,
                 }
             )
 
