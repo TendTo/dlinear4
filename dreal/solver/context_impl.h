@@ -20,7 +20,7 @@ class Context::Impl {
   Impl(Impl&&) = delete;
   Impl& operator=(const Impl&) = delete;
   Impl& operator=(Impl&&) = delete;
-  ~Impl() = default;
+  virtual ~Impl() = default;
 
   virtual void Assert(const Formula& f) = 0;
   virtual void Pop() = 0;
