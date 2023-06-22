@@ -1,0 +1,72 @@
+---
+- name: Register status of the Bazel signing key
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/bazel-archive-keyring
+  register: bazel_signing_key
+
+- name: Download the Bazel package repository signing key
+  become: true
+  when: not bazel_signing_key.stat.exists
+  ansible.builtin.get_url:
+    url: https://bazel.build/bazel-release.pub.gpg
+    dest: /usr/share/keyrings/bazel-archive-keyring
+    mode: "644"
+
+- name: Register status of the dearmored Bazel signing key
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/bazel-archive-keyring.gpg
+  register: dearmored_bazel_signing_key
+
+- name: Dearmor the Bazel package repository signing key
+  when: not dearmored_bazel_signing_key.stat.exists
+  become: true
+  ansible.builtin.command: gpg --dearmor /usr/share/keyrings/bazel-archive-keyring
+  changed_when: true
+
+- name: Register status of the Bazel buildifier
+  ansible.builtin.stat:
+    path: /usr/local/bin/buildifier
+  register: bezel_buildifier
+
+- name: Add buildfier for Bazel
+  when: not bezel_buildifier.stat.exists
+  become: true
+  ansible.builtin.get_url:
+    url: https://github.com/bazelbuild/buildtools/releases/download/v6.1.2/buildifier-linux-amd64
+    dest: /usr/local/bin/buildifier
+    mode: "755"
+  changed_when: true
+
+- name: Add Bazel repository source
+  become: true
+  ansible.builtin.apt_repository:
+    filename: bazel.list
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8"
+    update_cache: true
+
+- name: Requirements installation
+  become: true
+  ansible.builtin.apt:
+    package:
+      - python3-pip
+      - bison
+      - flex
+      - libgmp-dev
+      - python3-minimal
+      - make
+      - autoconf
+      - automake
+      - libtool
+      - g++
+      - bazel
+      - git
+      - libboost-all-dev
+      - cmake # for z3
+    state: present
+    update_cache: true
+
+# - name: Install z3-solver for Python
+#   ansible.builtin.pip:
+#     name:
+#       - z3-solver
+#     state: present

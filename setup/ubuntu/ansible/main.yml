@@ -1,0 +1,9 @@
+---
+- name: Setup dLinear istance
+  hosts: dLinear
+
+  tasks:
+    - name: Setup
+      ansible.builtin.include_tasks: ./subtasks/setup.yml
+    - name: DLinear
+      ansible.builtin.include_tasks: ./subtasks/dLinear.yml

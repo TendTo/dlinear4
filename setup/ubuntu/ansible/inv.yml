@@ -1,0 +1,9 @@
+all:
+  hosts:
+    dLinear:
+      ansible_host: 0.0.0.0 # IP address of the host
+      ansible_user: ubuntu # User name of the host
+  vars:
+    config:
+      base_dir: /home/ubuntu # Base directory of the host. No final slash.
+      dLinear_dir: dlinear4 # directory of dLinear. No final slash.

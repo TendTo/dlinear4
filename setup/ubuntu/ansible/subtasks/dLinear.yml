@@ -1,0 +1,56 @@
+---
+- name: Register dlinear4
+  ansible.builtin.stat:
+    path: "{{ config.base_dir}}/{{ config.dLinear_dir }}"
+  register: dlinear4
+
+- name: Clone dLinear
+  when: not dlinear4.stat.exists
+  ansible.builtin.git:
+    repo: https://github.com/TendTo/dlinear4.git
+    dest: "{{ config.base_dir }}/{{ config.dLinear_dir }}"
+    version: benchmark
+
+- name: Clone soplex
+  ansible.builtin.git:
+    repo: https://github.com/scipopt/soplex.git
+    dest: "{{ config.base_dir}}/{{ config.dLinear_dir}}/soplex"
+    version: release-502
+
+- name: Register qsopt-ex
+  ansible.builtin.stat:
+    path: "{{ config.base_dir}}/{{ config.dLinear_dir}}/install/qsopt-ex"
+  register: qsoptex
+
+- name: Install qsoptex
+  when: not qsoptex.stat.exists
+  ansible.builtin.shell: setup/setup_qsopt-ex.sh
+  args:
+    chdir: "{{ config.base_dir}}/{{ config.dLinear_dir}}"
+  changed_when: true
+
+- name: Register soplex
+  ansible.builtin.stat:
+    path: "{{ config.base_dir}}/{{ config.dLinear_dir}}/soplex/lib/libsoplex-pic.a"
+  register: soplex
+
+- name: Build shared soplex
+  when: not soplex.stat.exists
+  ansible.builtin.command: make SHARED=true
+  args:
+    chdir: "{{ config.base_dir}}/{{ config.dLinear_dir}}/soplex"
+  changed_when: true
+
+- name: Install soplex
+  when: not soplex.stat.exists
+  ansible.builtin.command: make install INSTALLDIR=.
+  args:
+    chdir: "{{ config.base_dir}}/{{ config.dLinear_dir}}/soplex"
+  changed_when: true
+
+- name: Rename libsoplex.a
+  when: not soplex.stat.exists
+  ansible.builtin.file:
+    src: "{{ config.base_dir}}/{{ config.dLinear_dir}}/soplex/lib/libsoplex-5.0.2.linux.x86_64.gnu.opt.a"
+    dest: "{{ config.base_dir}}/{{ config.dLinear_dir}}/soplex/lib/libsoplex-pic.a"
+    state: hard
