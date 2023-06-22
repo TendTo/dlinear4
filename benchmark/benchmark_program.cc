@@ -8,7 +8,7 @@ namespace dreal {
 
 static void benchmark_dlinear(benchmark::State& state, const string& filename,
                               const string& solver, const string& precision) {
-  const char* argv[6];
+  const char* argv[DEFAULT_ARGC];
   int argc = BenchmarkProgram::InitArgv(argv, filename, solver, precision);
 
   for (auto _ : state) {
