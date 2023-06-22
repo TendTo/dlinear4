@@ -102,6 +102,7 @@ dreal_cc_library(
     visibility = [
         "//dreal:__pkg__",
         "//dreal/solver:__pkg__",
+        "//benchmark:__pkg__",
     ],
     deps = [
         ":logic",

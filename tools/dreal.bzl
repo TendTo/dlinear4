@@ -198,6 +198,48 @@ def dreal_cc_binary(
             **kwargs
         )
 
+def dreal_cc_benchmark(name, srcs, size = None, copts = [], **kwargs):
+    """Creates a rule to declare a C++ benchmark unit.
+
+    Note that for almost all cases, dreal_cc_googlebench should be used,
+    intead of this rule.
+    By default, sets size="medium" since the benchmark involves the whole process, start to finish.
+
+    """
+    if size == None:
+        size = "medium"
+    if srcs == None:
+        srcs = ["benchmark/%s.cc" % name]
+    native.cc_test(
+        name = name,
+        size = size,
+        srcs = srcs,
+        copts = _platform_copts(copts, cc_test = 1),
+        **kwargs
+    )
+
+def dreal_cc_googlebenchmark(name, srcs, deps = None, use_default_main = True, **kwargs):
+    """Creates a rule to declare a C++ benchmark unit.
+
+    Note that for almost all cases, dreal_cc_googlebench should be used,
+    intead of this rule.
+    By default, sets size="medium" since the benchmark involves the whole process, start to finish.
+
+    Args:
+        name: identifier of the rule
+        srcs: source files
+        deps: additional dependecies, other than the google benchmark library
+        use_default_main: wheteher to use the default main implementation provided by the google benchmark library
+        **kwargs: additional arguments
+    """
+    if deps == None:
+        deps = []
+    if use_default_main:
+        deps.append("@com_google_benchmark//:benchmark_main")
+    else:
+        deps.append("@com_google_benchmark//:benchmark")
+    dreal_cc_benchmark(name = name, srcs = srcs, deps = deps, **kwargs)
+
 def dreal_cc_test(
         name,
         size = None,
@@ -276,15 +318,26 @@ def dreal_cc_googletest(
 
 def smt2_test(
         name,
-        options=[],
+        options = [],
         **kwargs):
     for lp_solver in ("soplex", "qsoptex"):
         for phase in (1, 2):
-            smt2_phased_test(name, lp_solver=lp_solver, phase=phase,
-                             options=options, **kwargs)
+            smt2_phased_test(
+                name,
+                lp_solver = lp_solver,
+                phase = phase,
+                options = options,
+                **kwargs
+            )
     for phase in (1, 2):
-        smt2_phased_test(name, lp_solver="qsoptex", phase=phase,
-                         options=options, continuous=True, **kwargs)
+        smt2_phased_test(
+            name,
+            lp_solver = "qsoptex",
+            phase = phase,
+            options = options,
+            continuous = True,
+            **kwargs
+        )
 
 def smt2_phased_test(
         name,
@@ -293,13 +346,14 @@ def smt2_phased_test(
         tags = [],
         lp_solver = "qsoptex",
         phase = None,
-        continuous=False,
-        exhaustive_ok=True,
+        continuous = False,
+        exhaustive_ok = True,
         **kwargs):
     """Create smt2 test."""
     if lp_solver not in ("soplex", "qsoptex"):
         fail("LP solver must be soplex or qsoptex", "lp_solver")
-    if phase not in (1, 2): fail("Phase must be 1 or 2", "phase")
+    if phase not in (1, 2):
+        fail("Phase must be 1 or 2", "phase")
     if not smt2:
         smt2 = name + ".smt2"
     data_files = native.glob([

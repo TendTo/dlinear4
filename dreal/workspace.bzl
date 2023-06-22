@@ -86,3 +86,10 @@ def dreal_workspace():
         repository = "khizmax/libcds",
         sha256 = "f090380ecd6b63a3c2b2f0bdb27260de2ccb22486ef7f47cc1175b70c6e4e388",
     )
+
+    github_archive(
+        name = "com_google_benchmark",  # GOOGLE
+        commit = "2dd015dfef425c866d9a43f2c67d8b52d709acb6",  # v1.8.0 / 2023/05/29
+        repository = "google/benchmark",
+        sha256 = "5ad5f2dda3addff21fa84ccdee2079fa8a663508f01036e3636bd88e2029c0c4",
+    )

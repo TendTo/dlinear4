@@ -14,3 +14,9 @@ dreal.egg-info/
 logs/
 /soplex
 /install/
+/.venv
+/benchmark/*.json
+/benchmark/*.csv
+/benchmark/**/*.smt2
+/soplex*
+/.vscode
