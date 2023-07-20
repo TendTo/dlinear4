@@ -117,6 +117,7 @@ class Smt2Driver {
   void set_trace_parsing(bool b) { trace_parsing_ = b; }
 
   Context& mutable_context() { return context_; }
+  const Context& context() const { return context_; }
 
   std::string& mutable_streamname() { return streamname_; }
 
