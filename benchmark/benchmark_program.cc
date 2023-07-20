@@ -85,51 +85,22 @@ void BenchmarkProgram::RegisterBenchmarks() {
   for (string& filename : smt2Files) {
     for (string& solver : solvers)
       for (string& precision : precisions) {
-        string isSatResult = IsSat(filename, solver, precision);
-        cout << isSatResult << std::endl;
+        InfoGatherer info_gatherer{filename, solver, precision};
+        info_gatherer.Run();
         benchmark::RegisterBenchmark(
-            fmt::format("{},{},{},{}", filename, solver, precision,
-                        isSatResult),
+            fmt::format("{},{},{},{},{},{}", filename, solver, precision,
+                        info_gatherer.actualPrecision(),
+                        info_gatherer.nAssertions(),
+                        info_gatherer.isSat() ? SAT : UNSAT),
             &benchmark_dlinear, filename, solver, precision);
       }
   }
 }
+
 inline vector<string> BenchmarkProgram::GetParameterValues(
     const string& parameter, const string& defaultValue) {
   return parameters.count(parameter) == 1 ? parameters[parameter]
                                           : vector<string>{defaultValue};
-}
-
-inline string BenchmarkProgram::IsSat(const string& filename,
-                                      const string& solver,
-                                      const string& precision) {
-  FILE* tempFile = fopen(TEMP_FILE, "w+");
-  FILE originalStdout = *stdout;  // preserve the original stdout
-  *stdout = *tempFile;            // redirect stdout to the temp file
-
-  const char* argv[DEFAULT_ARGC];
-  int argc = BenchmarkProgram::InitArgv(argv, filename, solver, precision);
-  MainProgram main{argc, argv};
-  main.Run();
-  fflush(stdout);
-
-  *stdout = originalStdout;  // restore stdout
-
-  rewind(tempFile);
-  char line[LINE_MAX];
-  while (fgets(line, LINE_MAX, tempFile)) {
-    if (strncmp(line, UNSAT, strlen(UNSAT)) ||
-        strncmp(line, SAT, strlen(SAT))) {
-      line[strlen(line) - 1] = '\0'; // Remove \n
-      fclose(tempFile);
-      return string{line};
-    }
-  }
-  fclose(tempFile);
-  throw DLINEAR_RUNTIME_ERROR(
-      "Could not parse the output of the run.\nFile '{}', solver '{}', "
-      "precision '{}'",
-      filename, solver, precision);
 }
 
 inline int BenchmarkProgram::InitArgv(const char* argv[DEFAULT_ARGC],

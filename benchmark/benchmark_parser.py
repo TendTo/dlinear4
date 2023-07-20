@@ -6,11 +6,6 @@ import sys
 import re
 from typing import TYPE_CHECKING
 
-try:
-    import z3
-except ImportError:
-    print("z3 not installed, skipping parsing of smt2 files")
-
 if TYPE_CHECKING:
     from typing import TypedDict, Literal
 
@@ -33,12 +28,12 @@ if TYPE_CHECKING:
         solver: str
         assertions: int
         precision: float
+        actualPrecision: float
         realTime: float
         cpuTime: float
         timeUnit: str
         iterations: int
         result: str
-        delta: str
 
     BenchmarkFormat = Literal["csv", "json"]
 
@@ -69,30 +64,19 @@ class BenchmarkParser:
             writer.writeheader()
             writer.writerows(self.benchmark_rows)
 
-    def parse_smt2_files(self, file: "str") -> "int":
-        if "z3" not in sys.modules:
-            return -1
-        file = file if self.smt2_folder == "" else f"{self.smt2_folder}/{file}"
-        formula = z3.parse_smt2_file(file)
-        s = z3.Solver()
-        s.add(formula)
-        return len(s.assertions())
-
     def parse_benchmarks(self, out_format: "BenchmarkFormat" = "csv"):
         benchmarks = self.get_benchmarks()
         self.benchmark_rows: "list[BenchmarkRow]" = []
 
         for benchmark in benchmarks:
-            file, solver, precision, result = benchmark["name"].split(",")
+            file, solver, precision, actual_precision, assertions, result = benchmark[
+                "name"
+            ].split(",")
+
             file = file.split("/")[-1]
             precision = float(precision)
-            # get the number 53-342 form the string 'delta-sat with delta = 5e-324 ( > 0)'
-            delta = "/"
-            delta_re = re.search(r"delta-sat[^=]*= *([\de-]+)", result)
-            if delta_re is not None and delta_re.groups():
-                delta = delta_re.groups()[0] or "not found"
-
-            assertions = self.parse_smt2_files(file)
+            assertions = int(assertions)
+            actual_precision = float(actual_precision)
 
             self.benchmark_rows.append(
                 {
@@ -100,12 +84,12 @@ class BenchmarkParser:
                     "solver": solver,
                     "assertions": assertions,
                     "precision": precision,
+                    "actualPrecision": actual_precision,
                     "realTime": round(benchmark["real_time"], 3),
                     "cpuTime": round(benchmark["cpu_time"], 3),
                     "timeUnit": benchmark["time_unit"],
                     "iterations": benchmark["iterations"],
-                    "result": "sat" if result.startswith("delta-sat") else "unsat",
-                    "delta": delta,
+                    "result": result,
                 }
             )
 

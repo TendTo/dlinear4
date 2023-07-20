@@ -7,6 +7,7 @@
 #include <benchmark/benchmark.h>
 
 #include "benchmark/util/utils.hh"
+#include "benchmark/info_gatherer.hh"
 
 #include "dreal/main_program.h"
 
@@ -107,16 +108,6 @@ class BenchmarkProgram {
    */
   inline vector<string> GetParameterValues(const string& parameter,
                                            const string& defaultValue);
-  /**
-   * @brief Chek if running the program with the provided arguments produces SAT
-   * (DELTA-SAT) or UNSAT as output.
-   * @param filename name of the file containg the input
-   * @param solver solver to use
-   * @param precision level of precision for the delta-completeness
-   * @return the line contaning the result: whether the output is sat (with what delta) or unsat
-   */
-  inline string IsSat(const string& filename, const string& solver,
-                      const string& precision);
 };
 
 }  // namespace dreal
