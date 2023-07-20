@@ -83,7 +83,7 @@ int SoplexTheorySolver::CheckSat(const Box& box,
   VectorRational x;
 
   model_ = box;
-  for (const pair<int, Variable>& kv : var_map) {
+  for (const pair<const int, Variable>& kv : var_map) {
     if (!model_.has_variable(kv.second)) {
       // Variable should already be present
       DREAL_LOG_WARN("SoplexTheorySolver::CheckSat: Adding var {} to model from SAT", kv.second);
@@ -95,7 +95,7 @@ int SoplexTheorySolver::CheckSat(const Box& box,
   // handle that here.  Also, if there are no constraints, we can immediately
   // return SAT afterwards if the bounds are OK.
   sat_status = SAT_DELTA_SATISFIABLE;
-  for (const pair<int, Variable>& kv : var_map) {
+  for (const pair<const int, Variable>& kv : var_map) {
     const Rational& lb{lower[kv.first]};
     const Rational& ub{upper[kv.first]};
     if (lb > ub) {
@@ -200,7 +200,7 @@ int SoplexTheorySolver::CheckSat(const Box& box,
   case SAT_DELTA_SATISFIABLE:
     if (haveSoln) {
     // Copy delta-feasible point from x into model_
-      for (const pair<int, Variable>& kv : var_map) {
+      for (const pair<const int, Variable>& kv : var_map) {
         DREAL_ASSERT(model_[kv.second].lb() <= to_mpq_class(x[kv.first].getMpqRef()) &&
                      to_mpq_class(x[kv.first].getMpqRef()) <= model_[kv.second].ub());
         model_[kv.second] = x[kv.first].getMpqRef();

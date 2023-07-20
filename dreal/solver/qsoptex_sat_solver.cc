@@ -513,7 +513,7 @@ void QsoptexSatSolver::AddLinearLiteral(const Variable& formulaVar, bool truth) 
                     get_constant_in_multiplication(expr));
     } else if (is_addition(expr)) {
       const std::map<Expression,mpq_class>& map = get_expr_to_coeff_map_in_addition(expr);
-      for (const pair<Expression,mpq_class>& pair : map) {
+      for (const pair<const Expression,mpq_class>& pair : map) {
         if (!is_variable(pair.first)) {
           throw DREAL_RUNTIME_ERROR("Expression {} not supported", expr);
         }
@@ -655,7 +655,7 @@ void QsoptexSatSolver::SetLinearObjective(const Expression& expr) {
     if (0 != get_constant_in_addition(expr)) {
       throw DREAL_RUNTIME_ERROR("Expression {} not supported in objective", expr);
     }
-    for (const pair<Expression,mpq_class>& pair : map) {
+    for (const pair<const Expression,mpq_class>& pair : map) {
       if (!is_variable(pair.first)) {
         throw DREAL_RUNTIME_ERROR("Expression {} not supported in objective", expr);
       }

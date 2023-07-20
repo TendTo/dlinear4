@@ -89,7 +89,7 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   mpq_QSget_obj(prob, obj);
 
   model_ = box;
-  for (const pair<int, Variable>& kv : var_map) {
+  for (const pair<const int, Variable>& kv : var_map) {
     if (!model_.has_variable(kv.second)) {
       // Variable should already be present
       DREAL_LOG_WARN("QsoptexTheorySolver::CheckOpt: Adding var {} to model from SAT", kv.second);
@@ -103,7 +103,7 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   lp_status = LP_DELTA_OPTIMAL;
   mpq_t temp;
   mpq_init(temp);
-  for (const pair<int, Variable>& kv : var_map) {
+  for (const pair<const int, Variable>& kv : var_map) {
     int res;
     res = mpq_QSget_bound(prob, kv.first, 'L', &temp);
     DREAL_ASSERT(!res);
@@ -175,7 +175,7 @@ int QsoptexTheorySolver::CheckOpt(const Box& box,
   case QS_LP_OPTIMAL:
   case QS_LP_DELTA_OPTIMAL:
     // Copy delta-optimal point from x into model_
-    for (const pair<int, Variable>& kv : var_map) {
+    for (const pair<const int, Variable>& kv : var_map) {
       DREAL_ASSERT(model_[kv.second].lb() <= mpq_class(x[kv.first]) &&
                    mpq_class(x[kv.first]) <= model_[kv.second].ub());
       model_[kv.second] = x[kv.first];
@@ -249,7 +249,7 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
   MpqArray x{colcount + rowcount};
 
   model_ = box;
-  for (const pair<int, Variable>& kv : var_map) {
+  for (const pair<const int, Variable>& kv : var_map) {
     if (!model_.has_variable(kv.second)) {
       // Variable should already be present
       DREAL_LOG_WARN("QsoptexTheorySolver::CheckSat: Adding var {} to model from SAT", kv.second);
@@ -263,7 +263,7 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
   sat_status = SAT_DELTA_SATISFIABLE;
   mpq_t temp;
   mpq_init(temp);
-  for (const pair<int, Variable>& kv : var_map) {
+  for (const pair<const int, Variable>& kv : var_map) {
     int res;
     res = mpq_QSget_bound(prob, kv.first, 'L', &temp);
     DREAL_ASSERT(!res);
@@ -346,7 +346,7 @@ int QsoptexTheorySolver::CheckSat(const Box& box,
   case SAT_SATISFIABLE:
   case SAT_DELTA_SATISFIABLE:
     // Copy delta-feasible point from x into model_
-    for (const pair<int, Variable>& kv : var_map) {
+    for (const pair<const int, Variable>& kv : var_map) {
       DREAL_ASSERT(model_[kv.second].lb() <= mpq_class(x[kv.first]) &&
                    mpq_class(x[kv.first]) <= model_[kv.second].ub());
       model_[kv.second] = x[kv.first];
