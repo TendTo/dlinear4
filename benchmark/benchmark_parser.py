@@ -34,6 +34,11 @@ if TYPE_CHECKING:
         timeUnit: str
         iterations: int
         result: str
+        s1: int
+        k1: int
+        s2: int
+        k2: int
+        t: int
 
     BenchmarkFormat = Literal["csv", "json"]
 
@@ -78,6 +83,13 @@ class BenchmarkParser:
             assertions = int(assertions)
             actual_precision = float(actual_precision)
 
+            filename = file.removesuffix(".smt2")
+            data = filename.split("-")
+            if len(data) == 5 and all(x.isnumeric() for x in data):
+                s1, k1, s2, k2, t = (int(x) for x in data)
+            else:
+                s1, k1, s2, k2, t = 0, 0, 0, 0, 0
+
             self.benchmark_rows.append(
                 {
                     "file": file,
@@ -90,6 +102,11 @@ class BenchmarkParser:
                     "timeUnit": benchmark["time_unit"],
                     "iterations": benchmark["iterations"],
                     "result": result,
+                    "s1": s1,
+                    "k1": k1,
+                    "s2": s2,
+                    "k2": k2,
+                    "t": t,
                 }
             )
 
