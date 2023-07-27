@@ -32,6 +32,14 @@ int BenchmarkProgram::Run() {
 
 void BenchmarkProgram::LoadSmt2Files(const string& directory,
                                      const string& fileExtension) {
+  // If there are arguments, use them as files to benchmark
+  if (this->_argc >= 2) {
+    for (int i = 1; i < this->_argc; i++)
+      this->smt2Files.push_back(string{this->_argv[i]});
+    return;
+  }
+
+  // Otherwise, look for files with the fileExtension in the given directory
   DIR* dir;
   struct dirent* ent;
   if ((dir = opendir(directory.c_str())) != NULL) {
@@ -48,6 +56,8 @@ void BenchmarkProgram::LoadSmt2Files(const string& directory,
 }
 
 void BenchmarkProgram::StartBenchmarks() {
+  std::cout << "Starting benchmarks" << std::endl;
+  std::cout << this->smt2Files[0] << " files to benchmark" << std::endl;
   benchmark::Initialize(&_argc, _argv);
   benchmark::SetDefaultTimeUnit(benchmark::kMillisecond);
   benchmark::RunSpecifiedBenchmarks();
@@ -83,17 +93,19 @@ void BenchmarkProgram::RegisterBenchmarks() {
       GetParameterValues("precision", "0.0009999999999999996");
 
   for (string& filename : smt2Files) {
-    for (string& solver : solvers)
+    for (string& solver : solvers) {
       for (string& precision : precisions) {
         InfoGatherer info_gatherer{filename, solver, precision};
-        info_gatherer.Run();
-        benchmark::RegisterBenchmark(
-            fmt::format("{},{},{},{},{},{}", filename, solver, precision,
-                        info_gatherer.actualPrecision(),
-                        info_gatherer.nAssertions(),
-                        info_gatherer.isSat() ? SAT : UNSAT),
-            &benchmark_dlinear, filename, solver, precision);
+        if (info_gatherer.Run()) {
+          benchmark::RegisterBenchmark(
+              fmt::format("{},{},{},{},{},{}", filename, solver, precision,
+                          info_gatherer.actualPrecision(),
+                          info_gatherer.nAssertions(),
+                          info_gatherer.isSat() ? SAT : UNSAT),
+              &benchmark_dlinear, filename, solver, precision);
+        }
       }
+    }
   }
 }
 

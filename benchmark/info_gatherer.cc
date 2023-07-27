@@ -18,10 +18,16 @@ void InfoGatherer::SetDebugParsing(bool debugParsing) {
   _debug_parsing = debugParsing;
 }
 
-void InfoGatherer::Run() {
+bool InfoGatherer::Run() {
   Init();
-  GatherInfo();
+  try {
+    GatherInfo();
+  } catch (const std::exception& e) {
+    std::cerr << "Exception: " << e.what() << std::endl;
+    return false;
+  }
   DeInit();
+  return true;
 }
 
 const string& InfoGatherer::filename() const { return _filename; }

@@ -23,7 +23,7 @@ class InfoGatherer {
                const string& precision);
   void SetDebugScanning(bool debugScanning);
   void SetDebugParsing(bool debugParsing);
-  void Run();
+  bool Run();
 
   const string& filename() const;
   const string& solver() const;

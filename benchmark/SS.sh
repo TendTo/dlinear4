@@ -81,15 +81,18 @@ echo "================="
 
 readonly output_file="${a}-${b}-${c}-${e}-${t}"
 
-pushd "$eg_sloan_path"
+pushd "$eg_sloan_path" > /dev/null
 ./eg_sloan -d 1 -m 1 -o "$script_path/smt2/$output_file.mps" -a "$a" -b "$b" -c "$c" -e "$e" -t "$t"
-popd
-pushd "$script_path/smt2"
+popd > /dev/null
+pushd "$script_path/smt2" > /dev/null
+echo "Converting to SMT2"
 toyconvert "$output_file.mps" -o "$output_file.smt2"
 sed -i 's/(set-option :produce-models true)/(set-logic QF_LRA)/' "$output_file.smt2"
 sed -i 's/(!//' "$output_file.smt2"
 sed -i 's/ *:named[^)]*)//' "$output_file.smt2"
 rm "$output_file.mps"
-popd
+rm -f "toyconvert.tix"
+echo "Done"
+popd > /dev/null
 
 # toyconvert output.mps -o output.smt2
