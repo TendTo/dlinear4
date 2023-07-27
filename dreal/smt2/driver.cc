@@ -93,6 +93,7 @@ void Smt2Driver::CheckSat() {
     const optional<Box> model{context_.CheckSat(&actual_precision)};
     double actual_precision_upper = nextafter(actual_precision.get_d(),
                                               numeric_limits<double>::infinity());
+    this->actual_precision_ = actual_precision.get_d();
     if (model) {
       // fmt::print uses shortest round-trip format for doubles, by default
       fmt::print("delta-sat with delta = {} ( > {})",

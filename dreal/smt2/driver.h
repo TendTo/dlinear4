@@ -119,6 +119,8 @@ class Smt2Driver {
   Context& mutable_context() { return context_; }
   const Context& context() const { return context_; }
 
+  double actual_precision() const { return actual_precision_; }
+
   std::string& mutable_streamname() { return streamname_; }
 
   /** Pointer to the current scanenr instance, this is used to connect the
@@ -143,6 +145,9 @@ class Smt2Driver {
 
   /** The context filled during parsing of the expressions. */
   Context context_;
+
+  /** Final precision */
+  double actual_precision_{-1};
 };
 
 }  // namespace dreal
