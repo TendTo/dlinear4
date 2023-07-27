@@ -5,6 +5,7 @@ import csv
 import sys
 import re
 from typing import TYPE_CHECKING
+import os
 
 if TYPE_CHECKING:
     from typing import TypedDict, Literal
@@ -23,8 +24,7 @@ if TYPE_CHECKING:
         cpu_time: float
         time_unit: str
 
-    class BenchmarkRow(TypedDict):
-        file: str
+    class SloaneStufken(TypedDict):
         solver: str
         assertions: int
         precision: float
@@ -40,6 +40,30 @@ if TYPE_CHECKING:
         k2: int
         t: int
 
+    class LPProblem(TypedDict):
+        file: str
+        solver: str
+        assertions: int
+        precision: float
+        actualPrecision: float
+        realTime: float
+        cpuTime: float
+        timeUnit: str
+        iterations: int
+        result: str
+
+    class SMTProblem(TypedDict):
+        file: str
+        solver: str
+        assertions: int
+        precision: float
+        actualPrecision: float
+        realTime: float
+        cpuTime: float
+        timeUnit: str
+        iterations: int
+        result: str
+
     BenchmarkFormat = Literal["csv", "json"]
 
 
@@ -48,7 +72,9 @@ class BenchmarkParser:
         self.input_file: "str" = input_file
         self.output_file: "str" = output_file
         self.smt2_folder: "str" = smt2_folder
-        self.benchmark_rows: "list[BenchmarkRow]" = []
+        self.lp_problem_rows: "list[LPProblem]" = []
+        self.slone_stufken_rows: "list[SloaneStufken]" = []
+        self.smt_problem_rows: "list[SMTProblem]" = []
 
     def get_benchmarks(self) -> "list[Benchmark]":
         with open(self.input_file, "r", encoding="utf-8") as f:
@@ -62,55 +88,132 @@ class BenchmarkParser:
             raise ValueError(f"Invalid output format: {out_format}")
 
     def write_benchmarks_csv(self):
-        if len(self.benchmark_rows) == 0:
-            return
-        with open(self.output_file, "w", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=self.benchmark_rows[0].keys())
-            writer.writeheader()
-            writer.writerows(self.benchmark_rows)
+        self.write_cvs("lp")
+        self.write_cvs("ss")
+        self.write_cvs("smt")
+
+    def write_cvs(self, row_type: "Literal['ss', 'smt', 'lp']"):
+        rows = self.lp_problem_rows
+        match row_type:
+            case "ss":
+                rows = self.slone_stufken_rows
+            case "smt":
+                rows = self.smt_problem_rows
+            case "lp":
+                rows = self.lp_problem_rows
+
+        if len(rows) > 0:
+            with open(self.get_output_with_prefix(row_type), "w", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+                writer.writeheader()
+                writer.writerows(rows)
+
+    def parse_lp_problem(self, benchmark: "Benchmark"):
+        file, solver, precision, actual_precision, assertions, result = benchmark[
+            "name"
+        ].split(",")
+
+        file = file.split("/")[-1]
+        file = file.removeprefix("LP_")
+        file = file.removesuffix(".smt2")
+        precision = float(precision)
+        assertions = int(assertions)
+        actual_precision = float(actual_precision)
+
+        self.lp_problem_rows.append(
+            {
+                "file": file,
+                "solver": solver,
+                "assertions": assertions,
+                "precision": precision,
+                "actualPrecision": actual_precision,
+                "realTime": round(benchmark["real_time"], 3),
+                "cpuTime": round(benchmark["cpu_time"], 3),
+                "timeUnit": benchmark["time_unit"],
+                "iterations": benchmark["iterations"],
+                "result": result,
+            }
+        )
+
+    def parse_sloane_stufken_problem(self, benchmark: "Benchmark"):
+        file, solver, precision, actual_precision, assertions, result = benchmark[
+            "name"
+        ].split(",")
+
+        file = file.split("/")[-1]
+        file = file.removesuffix(".smt2")
+        precision = float(precision)
+        assertions = int(assertions)
+        actual_precision = float(actual_precision)
+        s1, k1, s2, k2, t = (int(val) for val in file.split("-"))
+
+        self.slone_stufken_rows.append(
+            {
+                "solver": solver,
+                "assertions": assertions,
+                "precision": precision,
+                "actualPrecision": actual_precision,
+                "realTime": round(benchmark["real_time"], 3),
+                "cpuTime": round(benchmark["cpu_time"], 3),
+                "timeUnit": benchmark["time_unit"],
+                "iterations": benchmark["iterations"],
+                "result": result,
+                "k1": k1,
+                "s1": s1,
+                "k2": k2,
+                "s2": s2,
+                "t": t,
+            }
+        )
+
+    def parse_smt_problem(self, benchmark: "Benchmark"):
+        file, solver, precision, actual_precision, assertions, result = benchmark[
+            "name"
+        ].split(",")
+
+        file = file.split("/")[-1]
+        file = file.removesuffix(".smt2")
+        file = file.removeprefix("SMT_")
+        precision = float(precision)
+        assertions = int(assertions)
+        actual_precision = float(actual_precision)
+
+        self.smt_problem_rows.append(
+            {
+                "file": file,
+                "solver": solver,
+                "assertions": assertions,
+                "precision": precision,
+                "actualPrecision": actual_precision,
+                "realTime": round(benchmark["real_time"], 3),
+                "cpuTime": round(benchmark["cpu_time"], 3),
+                "timeUnit": benchmark["time_unit"],
+                "iterations": benchmark["iterations"],
+                "result": result,
+            }
+        )
 
     def parse_benchmarks(self, out_format: "BenchmarkFormat" = "csv"):
         benchmarks = self.get_benchmarks()
-        self.benchmark_rows: "list[BenchmarkRow]" = []
+        self.lp_problem_rows: "list[LPProblem]" = []
 
         for benchmark in benchmarks:
-            file, solver, precision, actual_precision, assertions, result = benchmark[
-                "name"
-            ].split(",")
-
+            file = benchmark["name"].split(",")[0]
             file = file.split("/")[-1]
-            precision = float(precision)
-            assertions = int(assertions)
-            actual_precision = float(actual_precision)
-
-            filename = file.removesuffix(".smt2")
-            data = filename.split("-")
-            if len(data) == 5 and all(x.isnumeric() for x in data):
-                s1, k1, s2, k2, t = (int(x) for x in data)
+            if file.startswith("LP"):
+                self.parse_lp_problem(benchmark)
+            elif file.startswith("SMT"):
+                self.parse_smt_problem(benchmark)
+            elif re.match(r"^(\d+-){4}\d+.smt2$", file):
+                self.parse_sloane_stufken_problem(benchmark)
             else:
-                s1, k1, s2, k2, t = 0, 0, 0, 0, 0
-
-            self.benchmark_rows.append(
-                {
-                    "file": file,
-                    "solver": solver,
-                    "assertions": assertions,
-                    "precision": precision,
-                    "actualPrecision": actual_precision,
-                    "realTime": round(benchmark["real_time"], 3),
-                    "cpuTime": round(benchmark["cpu_time"], 3),
-                    "timeUnit": benchmark["time_unit"],
-                    "iterations": benchmark["iterations"],
-                    "result": result,
-                    "s1": s1,
-                    "k1": k1,
-                    "s2": s2,
-                    "k2": k2,
-                    "t": t,
-                }
-            )
+                self.parse_smt_problem(benchmark)
 
         self.write_benchmarks(out_format)
+
+    def get_output_with_prefix(self, prefix: "str") -> "str":
+        filename = f"{prefix}{os.path.basename(self.output_file)}"
+        return os.path.join(os.path.dirname(self.output_file), filename)
 
 
 def main():
@@ -128,3 +231,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
