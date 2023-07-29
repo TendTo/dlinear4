@@ -20,3 +20,5 @@ logs/
 /benchmark/**/*.smt2
 /soplex*
 /.vscode
+/benchmark/**/*.mps
+/benchmark/**/*.mps.compressed

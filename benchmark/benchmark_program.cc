@@ -53,8 +53,8 @@ void BenchmarkProgram::LoadSmt2Files(const string& directory,
 }
 
 void BenchmarkProgram::StartBenchmarks() {
-  int argc = 1;
-  char* argv[1] = {"benchmark"};
+  int argc = 0;
+  char* argv[1];
   benchmark::Initialize(&argc, argv);
   benchmark::SetDefaultTimeUnit(benchmark::kMillisecond);
   benchmark::RunSpecifiedBenchmarks();
