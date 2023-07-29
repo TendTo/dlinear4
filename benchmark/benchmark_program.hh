@@ -6,8 +6,9 @@
 
 #include <benchmark/benchmark.h>
 
-#include "benchmark/util/utils.hh"
 #include "benchmark/info_gatherer.hh"
+#include "benchmark/util/config.hh"
+#include "benchmark/util/utils.hh"
 
 #include "dreal/main_program.h"
 
@@ -56,11 +57,12 @@ class BenchmarkProgram {
                              const string& precision);
 
  private:
-  int _argc;     // Number of command line arguments
-  char** _argv;  // Array of command line arguments
+  int argc_;
+  char** argv_;
+  BenchConfig config;
   /**
-   * @brief Map containing all the configuration loaded from the configuration
-   * file.
+   * @brief Map containing all the configuration loaded from the
+   * configuration file.
    */
   std::map<string, vector<string>> parameters;
   /**

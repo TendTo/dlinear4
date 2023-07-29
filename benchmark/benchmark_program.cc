@@ -17,10 +17,8 @@ static void benchmark_dlinear(benchmark::State& state, const string& filename,
   }
 }
 
-BenchmarkProgram::BenchmarkProgram(int argc, char* argv[]) {
-  this->_argc = argc;
-  this->_argv = argv;
-}
+BenchmarkProgram::BenchmarkProgram(int argc, char* argv[])
+    : argc_{argc}, argv_{argv}, config{argc, argv} {}
 
 int BenchmarkProgram::Run() {
   ReadConfigurationFile();
@@ -33,9 +31,8 @@ int BenchmarkProgram::Run() {
 void BenchmarkProgram::LoadSmt2Files(const string& directory,
                                      const string& fileExtension) {
   // If there are arguments, use them as files to benchmark
-  if (this->_argc >= 2) {
-    for (int i = 1; i < this->_argc; i++)
-      this->smt2Files.push_back(string{this->_argv[i]});
+  if (config.filesProvided()) {
+    smt2Files = config.copyFiles();
     return;
   }
 
@@ -56,9 +53,9 @@ void BenchmarkProgram::LoadSmt2Files(const string& directory,
 }
 
 void BenchmarkProgram::StartBenchmarks() {
-  std::cout << "Starting benchmarks" << std::endl;
-  std::cout << this->smt2Files[0] << " files to benchmark" << std::endl;
-  benchmark::Initialize(&_argc, _argv);
+  int argc = 1;
+  char* argv[1] = {"benchmark"};
+  benchmark::Initialize(&argc, argv);
   benchmark::SetDefaultTimeUnit(benchmark::kMillisecond);
   benchmark::RunSpecifiedBenchmarks();
   benchmark::Shutdown();
@@ -95,14 +92,19 @@ void BenchmarkProgram::RegisterBenchmarks() {
   for (string& filename : smt2Files) {
     for (string& solver : solvers) {
       for (string& precision : precisions) {
-        InfoGatherer info_gatherer{filename, solver, precision};
+        InfoGatherer info_gatherer{filename, solver, precision,
+                                   config.timeout()};
         if (info_gatherer.Run()) {
+          if (config.isDryRun()) continue;
           benchmark::RegisterBenchmark(
               fmt::format("{},{},{},{},{},{}", filename, solver, precision,
                           info_gatherer.actualPrecision(),
                           info_gatherer.nAssertions(),
                           info_gatherer.isSat() ? SAT : UNSAT),
               &benchmark_dlinear, filename, solver, precision);
+        } else {
+          cerr << "Could not gather info from " << filename << " with solver "
+               << solver << " and precision " << precision << std::endl;
         }
       }
     }
