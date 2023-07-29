@@ -25,46 +25,47 @@ if TYPE_CHECKING:
         time_unit: str
 
     class SloaneStufken(TypedDict):
-        solver: str
         assertions: int
         precision: float
-        actualPrecision: float
-        realTime: float
-        cpuTime: float
         timeUnit: str
         iterations: int
-        result: str
         s1: int
         k1: int
         s2: int
         k2: int
         t: int
+        actualPrecisionS: float
+        actualPrecisionQ: float
+        timeS: float
+        timeQ: float
+        resultS: str
+        resultQ: str
 
     class LPProblem(TypedDict):
         file: str
-        solver: str
         assertions: int
         precision: float
-        actualPrecision: float
-        realTime: float
-        cpuTime: float
         timeUnit: str
         iterations: int
-        result: str
+        actualPrecisionS: float
+        actualPrecisionQ: float
+        timeS: float
+        timeQ: float
+        resultS: str
+        resultQ: str
 
     class SMTProblem(TypedDict):
         file: str
-        solver: str
         assertions: int
         precision: float
-        actualPrecision: float
-        realTime: float
-        cpuTime: float
         timeUnit: str
         iterations: int
-        result: str
-
-    BenchmarkFormat = Literal["csv", "json"]
+        actualPrecisionS: float
+        actualPrecisionQ: float
+        timeS: float
+        timeQ: float
+        resultS: str
+        resultQ: str
 
 
 class BenchmarkParser:
@@ -72,20 +73,15 @@ class BenchmarkParser:
         self.input_file: "str" = input_file
         self.output_file: "str" = output_file
         self.smt2_folder: "str" = smt2_folder
-        self.lp_problem_rows: "list[LPProblem]" = []
-        self.slone_stufken_rows: "list[SloaneStufken]" = []
-        self.smt_problem_rows: "list[SMTProblem]" = []
+        self.benchmarks: "list[Benchmark]" = []
+        self.lp_problem_rows: "dict[str, LPProblem]" = {}
+        self.slone_stufken_rows: "dict[str, SloaneStufken]" = {}
+        self.smt_problem_rows: "dict[str, SMTProblem]" = {}
 
-    def get_benchmarks(self) -> "list[Benchmark]":
+    def load_benchmarks(self):
         with open(self.input_file, "r", encoding="utf-8") as f:
             benchmark_json: "dict" = json.load(f)
-            return benchmark_json.get("benchmarks", [])
-
-    def write_benchmarks(self, out_format: "BenchmarkFormat" = "csv"):
-        if out_format == "csv":
-            self.write_benchmarks_csv()
-        else:
-            raise ValueError(f"Invalid output format: {out_format}")
+            self.benchmarks = benchmark_json.get("benchmarks", [])
 
     def write_benchmarks_csv(self):
         self.write_cvs("lp")
@@ -93,20 +89,26 @@ class BenchmarkParser:
         self.write_cvs("smt")
 
     def write_cvs(self, row_type: "Literal['ss', 'smt', 'lp']"):
-        rows = self.lp_problem_rows
+        file_row = self.lp_problem_rows
         match row_type:
             case "ss":
-                rows = self.slone_stufken_rows
+                file_row = self.slone_stufken_rows
             case "smt":
-                rows = self.smt_problem_rows
+                file_row = self.smt_problem_rows
             case "lp":
-                rows = self.lp_problem_rows
+                file_row = self.lp_problem_rows
 
-        if len(rows) > 0:
-            with open(self.get_output_with_prefix(row_type), "w", encoding="utf-8") as f:
+        if len(file_row) > 0:
+            rows = [file_row[key] for key in file_row]
+            with open(
+                self.get_output_file_with_prefix(row_type), "w", encoding="utf-8"
+            ) as f:
                 writer = csv.DictWriter(f, fieldnames=rows[0].keys())
                 writer.writeheader()
                 writer.writerows(rows)
+
+    def row_to_csv(self, row: "dict[str, str]"):
+        pass
 
     def parse_lp_problem(self, benchmark: "Benchmark"):
         file, solver, precision, actual_precision, assertions, result = benchmark[
@@ -120,20 +122,32 @@ class BenchmarkParser:
         assertions = int(assertions)
         actual_precision = float(actual_precision)
 
-        self.lp_problem_rows.append(
+        key = f"{file}/{precision}"
+        row: "LPProblem" = self.lp_problem_rows.get(
+            key,
             {
                 "file": file,
-                "solver": solver,
                 "assertions": assertions,
                 "precision": precision,
-                "actualPrecision": actual_precision,
-                "realTime": round(benchmark["real_time"], 3),
-                "cpuTime": round(benchmark["cpu_time"], 3),
                 "timeUnit": benchmark["time_unit"],
                 "iterations": benchmark["iterations"],
-                "result": result,
-            }
+                "actualPrecisionS": -1,
+                "actualPrecisionQ": -1,
+                "timeS": -1,
+                "timeQ": -1,
+                "resultS": "/",
+                "resultQ": "/",
+            },
         )
+        if solver == "soplex":
+            row["actualPrecisionS"] = actual_precision
+            row["timeS"] = round(benchmark["cpu_time"], 3)
+            row["resultS"] = result
+        elif solver == "qsoptex":
+            row["actualPrecisionQ"] = actual_precision
+            row["timeQ"] = round(benchmark["cpu_time"], 3)
+            row["resultQ"] = result
+        self.lp_problem_rows[key] = row
 
     def parse_sloane_stufken_problem(self, benchmark: "Benchmark"):
         file, solver, precision, actual_precision, assertions, result = benchmark[
@@ -147,24 +161,36 @@ class BenchmarkParser:
         actual_precision = float(actual_precision)
         s1, k1, s2, k2, t = (int(val) for val in file.split("-"))
 
-        self.slone_stufken_rows.append(
+        key = f"{file}/{precision}"
+        row: "SloaneStufken" = self.slone_stufken_rows.get(
+            key,
             {
-                "solver": solver,
                 "assertions": assertions,
                 "precision": precision,
-                "actualPrecision": actual_precision,
-                "realTime": round(benchmark["real_time"], 3),
-                "cpuTime": round(benchmark["cpu_time"], 3),
                 "timeUnit": benchmark["time_unit"],
                 "iterations": benchmark["iterations"],
-                "result": result,
-                "k1": k1,
                 "s1": s1,
-                "k2": k2,
+                "k1": k1,
                 "s2": s2,
+                "k2": k2,
                 "t": t,
-            }
+                "actualPrecisionS": -1,
+                "actualPrecisionQ": -1,
+                "timeS": -1,
+                "timeQ": -1,
+                "resultS": "/",
+                "resultQ": "/",
+            },
         )
+        if solver == "soplex":
+            row["actualPrecisionS"] = actual_precision
+            row["timeS"] = round(benchmark["cpu_time"], 3)
+            row["resultS"] = result
+        elif solver == "qsoptex":
+            row["actualPrecisionQ"] = actual_precision
+            row["timeQ"] = round(benchmark["cpu_time"], 3)
+            row["resultQ"] = result
+        self.slone_stufken_rows[key] = row
 
     def parse_smt_problem(self, benchmark: "Benchmark"):
         file, solver, precision, actual_precision, assertions, result = benchmark[
@@ -178,26 +204,37 @@ class BenchmarkParser:
         assertions = int(assertions)
         actual_precision = float(actual_precision)
 
-        self.smt_problem_rows.append(
+        key = f"{file}/{precision}"
+        row: "SMTProblem" = self.smt_problem_rows.get(
+            key,
             {
                 "file": file,
-                "solver": solver,
                 "assertions": assertions,
                 "precision": precision,
-                "actualPrecision": actual_precision,
-                "realTime": round(benchmark["real_time"], 3),
-                "cpuTime": round(benchmark["cpu_time"], 3),
                 "timeUnit": benchmark["time_unit"],
                 "iterations": benchmark["iterations"],
-                "result": result,
-            }
+                "actualPrecisionS": -1,
+                "actualPrecisionQ": -1,
+                "timeS": -1,
+                "timeQ": -1,
+                "resultS": "/",
+                "resultQ": "/",
+            },
         )
+        if solver == "soplex":
+            row["actualPrecisionS"] = actual_precision
+            row["timeS"] = round(benchmark["cpu_time"], 3)
+            row["resultS"] = result
+        elif solver == "qsoptex":
+            row["actualPrecisionQ"] = actual_precision
+            row["timeQ"] = round(benchmark["cpu_time"], 3)
+            row["resultQ"] = result
+        self.smt_problem_rows[key] = row
 
-    def parse_benchmarks(self, out_format: "BenchmarkFormat" = "csv"):
-        benchmarks = self.get_benchmarks()
-        self.lp_problem_rows: "list[LPProblem]" = []
+    def parse_benchmarks(self):
+        self.load_benchmarks()
 
-        for benchmark in benchmarks:
+        for benchmark in self.benchmarks:
             file = benchmark["name"].split(",")[0]
             file = file.split("/")[-1]
             if file.startswith("LP"):
@@ -209,9 +246,9 @@ class BenchmarkParser:
             else:
                 self.parse_smt_problem(benchmark)
 
-        self.write_benchmarks(out_format)
+        self.write_benchmarks_csv()
 
-    def get_output_with_prefix(self, prefix: "str") -> "str":
+    def get_output_file_with_prefix(self, prefix: "str") -> "str":
         filename = f"{prefix}{os.path.basename(self.output_file)}"
         return os.path.join(os.path.dirname(self.output_file), filename)
 
@@ -231,4 +268,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
