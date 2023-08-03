@@ -43,7 +43,7 @@ for file in $(find . -name "*.mps.compressed"); do
 done
 
 for file in $(find . -name "*.mps"); do
-    smt2_file="LP_${file%.*}.smt2"
+    smt2_file=LP_$(basename "$file" .mps).smt2
     echo "Converting $file to SMT-LIB2 format..."
     toyconvert "$file" -o "$smt2_file" 2> /dev/null
     sed -i 's/(set-option :produce-models true)/(set-logic QF_LRA)/' "$smt2_file"

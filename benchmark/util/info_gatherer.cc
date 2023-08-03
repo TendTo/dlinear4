@@ -27,6 +27,8 @@ void InfoGatherer::SetDebugParsing(bool debugParsing) {
 }
 
 bool InfoGatherer::Run() {
+  std::cout << "Running " << filename_ << " with " << solver_ << " and "
+            << precision_ << std::endl;
   // Shared memory to store the results of the child process.
   shared_results* results = static_cast<shared_results*>(
       mmap(NULL, sizeof(shared_results), PROT_READ | PROT_WRITE,

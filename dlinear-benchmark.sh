@@ -7,4 +7,4 @@ readonly csv_file="$script_path/benchmark.csv"
 export BENCHMARK_OUT="${json_file}" 
 export BENCHMARK_OUT_FORMAT=json
 export LD_LIBRARY_PATH="$script_path/benchmark.runfiles/libs"
-"$script_path/benchmark.runfiles/benchmark/benchmark" -f benchmark.runfiles/smt2/ite_02.smt2
+"$script_path/benchmark.runfiles/benchmark/benchmark" $@
