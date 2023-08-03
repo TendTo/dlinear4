@@ -2,4 +2,6 @@ cc_library(
     name = "ezoptionparser",
     hdrs = ["ezOptionParser.hpp"],
     visibility = ["//visibility:public"],
+    include_prefix = "ezoptionparser",
+    includes = ["."],
 )

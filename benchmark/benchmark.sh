@@ -4,7 +4,12 @@ readonly root_path="$script_path/.."
 readonly json_file="$script_path/benchmark.json"
 readonly csv_file="$script_path/benchmark.csv"
 
-BENCHMARK_OUT="${json_file}" BENCHMARK_OUT_FORMAT=json bazel run //benchmark --//:enable-soplex=true $@
+BENCHMARK_OUT="${json_file}" BENCHMARK_OUT_FORMAT=json bazel run //benchmark --//:enable-soplex=true -- $@
+
+if [ ! -f "${json_file}" ]; then
+    echo "Benchmark failed"
+    exit 1
+fi
 
 pushd "$script_path" > /dev/null
 ./benchmark_parser.py "${json_file}" "${csv_file}"

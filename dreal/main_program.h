@@ -11,7 +11,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
-#include "./ezOptionParser.hpp"
+#include <ezoptionparser/ezOptionParser.hpp>
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif

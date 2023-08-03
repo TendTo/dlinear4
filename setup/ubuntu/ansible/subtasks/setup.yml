@@ -61,7 +61,6 @@
       - bazel
       - git
       - libboost-all-dev
-      - cmake # for z3
     state: present
     update_cache: true
 

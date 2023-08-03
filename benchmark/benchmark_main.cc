@@ -10,7 +10,7 @@ void HandleSigInt(const int) {
 }
 }  // namespace
 
-int main(int argc, char* argv[]) {
+int main(int argc, const char* argv[]) {
   std::signal(SIGINT, HandleSigInt);
   dreal::BenchmarkProgram main{argc, argv};
   return main.Run();

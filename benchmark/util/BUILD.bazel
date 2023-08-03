@@ -1,0 +1,44 @@
+cc_library(
+    name = "config",
+    srcs = [
+        "config.cc",
+    ],
+    hdrs = [
+        "config.hh",
+    ],
+    visibility = [
+        "//benchmark:__subpackages__",
+    ],
+    deps = [
+        "@ezoptionparser",
+    ],
+)
+
+cc_library(
+    name = "utils",
+    srcs = [
+        "utils.cc",
+    ],
+    hdrs = [
+        "utils.hh",
+    ],
+    visibility = [
+        "//benchmark:__subpackages__",
+    ],
+)
+
+cc_library(
+    name = "info",
+    srcs = [
+        "info_gatherer.cc",
+    ],
+    hdrs = [
+        "info_gatherer.hh",
+    ],
+    visibility = [
+        "//benchmark:__subpackages__",
+    ],
+    deps = [
+        "//dreal:main_program",
+    ],
+)

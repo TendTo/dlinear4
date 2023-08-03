@@ -6,14 +6,12 @@
 
 #include <benchmark/benchmark.h>
 
-#include "benchmark/info_gatherer.hh"
 #include "benchmark/util/config.hh"
+#include "benchmark/util/info_gatherer.hh"
 #include "benchmark/util/utils.hh"
 
 #include "dreal/main_program.h"
 
-#define CONF_FILE "benchmark/benchmark.conf"
-#define SMT2_DIR "benchmark/smt2"
 #define SMT2_EXT ".smt2"
 #define DEFAULT_ARGC 6
 #define TEMP_FILE "/tmp/dLinear-benchmark"
@@ -34,7 +32,7 @@ class BenchmarkProgram {
    * @param argv array of command line arguments. Passed by the main
    * function
    */
-  BenchmarkProgram(int argc, char* argv[]);
+  BenchmarkProgram(int argc, const char* argv[]);
   /**
    * @brief Run the benchmarks.
    * @return exit status
@@ -58,7 +56,7 @@ class BenchmarkProgram {
 
  private:
   int argc_;
-  char** argv_;
+  const char** argv_;
   BenchConfig config;
   /**
    * @brief Map containing all the configuration loaded from the
@@ -76,7 +74,7 @@ class BenchmarkProgram {
    * parameter = value1 [value2 ...]
    * @param filename configuration file
    */
-  void ReadConfigurationFile(const string& filePath = CONF_FILE);
+  void ReadConfigurationFile();
   /**
    * @brief Load all the files found in the @p directory matching the provided
    * @p fileExtension and store their name in the @ref
@@ -84,8 +82,7 @@ class BenchmarkProgram {
    * @param directory directory containing the files to load
    * @param fileExtension extension of the files to load
    */
-  void LoadSmt2Files(const string& directory = SMT2_DIR,
-                     const string& fileExtension = SMT2_EXT);
+  void LoadSmt2Files(const string& fileExtension = SMT2_EXT);
 
   /**
    * @brief Register all the benchmarks that will be run.

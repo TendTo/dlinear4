@@ -17,8 +17,10 @@ static void benchmark_dlinear(benchmark::State& state, const string& filename,
   }
 }
 
-BenchmarkProgram::BenchmarkProgram(int argc, char* argv[])
-    : argc_{argc}, argv_{argv}, config{argc, argv} {}
+BenchmarkProgram::BenchmarkProgram(int argc, const char* argv[])
+    : argc_{argc}, argv_{argv}, config{} {
+  config.Parse(argc, argv);
+}
 
 int BenchmarkProgram::Run() {
   ReadConfigurationFile();
@@ -28,8 +30,7 @@ int BenchmarkProgram::Run() {
   return 0;
 }
 
-void BenchmarkProgram::LoadSmt2Files(const string& directory,
-                                     const string& fileExtension) {
+void BenchmarkProgram::LoadSmt2Files(const string& fileExtension) {
   // If there are arguments, use them as files to benchmark
   if (config.filesProvided()) {
     smt2Files = config.copyFiles();
@@ -39,15 +40,15 @@ void BenchmarkProgram::LoadSmt2Files(const string& directory,
   // Otherwise, look for files with the fileExtension in the given directory
   DIR* dir;
   struct dirent* ent;
-  if ((dir = opendir(directory.c_str())) != NULL) {
+  if ((dir = opendir(config.path().c_str())) != NULL) {
     while ((ent = readdir(dir)) != NULL) {
       if (EndsWith(ent->d_name, fileExtension.c_str()))
-        smt2Files.push_back(fmt::format("{}/{}", directory, ent->d_name));
+        smt2Files.push_back(fmt::format("{}/{}", config.path(), ent->d_name));
     }
     closedir(dir);
   } else {
     throw DLINEAR_RUNTIME_ERROR(
-        "Could not open directory '{}' looking for '{}' files", directory,
+        "Could not open directory '{}' looking for '{}' files", config.path(),
         fileExtension);
   }
 }
@@ -61,10 +62,11 @@ void BenchmarkProgram::StartBenchmarks() {
   benchmark::Shutdown();
 }
 
-void BenchmarkProgram::ReadConfigurationFile(const string& filename) {
-  std::ifstream conf_file{filename};
+void BenchmarkProgram::ReadConfigurationFile() {
+  std::ifstream conf_file{config.config_file()};
   if (!conf_file.is_open())
-    throw DLINEAR_RUNTIME_ERROR("File '{}' could not be opened", filename);
+    throw DLINEAR_RUNTIME_ERROR("File '{}' could not be opened",
+                                config.config_file());
 
   const std::regex conf_regex("^(\\w+) *= *(.+?) *$");
   std::smatch conf_matches;

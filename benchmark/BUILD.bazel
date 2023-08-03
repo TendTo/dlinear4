@@ -9,16 +9,20 @@ package(default_visibility = ["//visibility:private"])
 # -----
 dreal_cc_googlebenchmark(
     name = "benchmark",
-    srcs = glob([
-        "**/*.cc",
-        "**/*.hh",
-    ]),
+    srcs = [
+        "benchmark_program.cc",
+        "benchmark_main.cc",
+        "benchmark_program.hh",
+    ],
     data = glob([
         "smt2/*.smt2",
     ]) + ["benchmark.conf"],
     use_default_main = False,
     deps = [
         "//dreal:main_program",
+        "//benchmark/util:info",
+        "//benchmark/util:config",
+        "//benchmark/util:utils",
     ],
 )
 

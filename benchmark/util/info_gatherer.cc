@@ -1,4 +1,4 @@
-#include "benchmark/info_gatherer.hh"
+#include "info_gatherer.hh"
 
 namespace dreal {
 
