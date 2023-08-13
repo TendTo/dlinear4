@@ -5,8 +5,6 @@ load(
     "DREAL_VERSION",
     "dreal_cc_binary",
     "dreal_cc_library",
-    #"dreal_py_test",
-    #"dreal_pybind_library",
 )
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
@@ -99,19 +97,17 @@ dreal_cc_library(
         "//conditions:default": ["HAVE_SOPLEX=0"],
     }),
     visibility = [
-        #"//dreal/test/dr:__subpackages__",
-        "//dreal/test/smt2:__subpackages__",
         "//benchmark:__subpackages__",
+        "//dreal/test/smt2:__subpackages__",
     ],
     deps = [
-        #"//dreal/dr",
+        "//dreal:qsopt-ex",
         "//dreal/smt2",
         "//dreal/solver:config",
         "//dreal/util:filesystem",
+        "//dreal/util:infty",
         "//dreal/util:logging",
         "//dreal/util:rounding_mode_guard",
-        "//dreal/util:infty",
-        "//dreal:qsopt-ex",
         "@ezoptionparser",
         "@fmt",
     ] + select({
@@ -125,8 +121,8 @@ dreal_cc_binary(
     srcs = [
         "dreal_main.cc",
     ],
+    linkstatic = 1,
     visibility = [
-        #"//dreal/test/dr:__subpackages__",
         "//dreal/test/smt2:__subpackages__",
     ],
     deps = [

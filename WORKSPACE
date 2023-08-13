@@ -57,29 +57,8 @@ http_archive(
 # https://groups.google.com/forum/#!topic/bazel-discuss/Ndd820uaq2U
 new_local_repository(
     name = "linux_libs",
+    build_file = "//tools:linux_libs.BUILD.bazel",
     path = "/usr/lib/x86_64-linux-gnu",
-    build_file_content = """
-
-cc_library(
-    name = "gmpxx",
-    srcs = ["libgmpxx.so"],
-    visibility = ["//visibility:public"],
-    deps = [":gmp"],
-)
-
-cc_library(
-    name = "gmp",
-    srcs = ["libgmp.so"],
-    visibility = ["//visibility:public"],
-)
-
-cc_library(
-    name = "z",
-    srcs = ["libz.so"],
-    visibility = ["//visibility:public"],
-)
-
-"""
 )
 
 load("@rules_python//python:repositories.bzl", "py_repositories")

@@ -39,6 +39,7 @@ mpq_class StringToMpq(const string& str) {
 
 MpqArray::MpqArray(int size) {
     array = mpq_EGlpNumAllocArray(size);
+    __EGlpNumAllocArray(mpq_t, size);
 }
 
 MpqArray::~MpqArray() {

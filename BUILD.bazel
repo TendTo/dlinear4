@@ -2,7 +2,6 @@ load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("//tools:dreal.bzl", "DREAL_PREFIX", "DREAL_VERSION", "dreal_cc_library")
 load("//tools:make-variables.bzl", "var_providing_rule")
-load("//third_party/com_github_grailbio_bazel-compilation-database:aspects.bzl", "compilation_database")
 
 package(
     default_visibility = ["//visibility:private"],
@@ -13,15 +12,6 @@ exports_files([
     ".clang-format",
 ])
 
-compilation_database(
-    name = "compdb",
-    exec_root = "bazel-dreal4",
-    targets = [
-        ":dreal",
-        ":dreal_shared_library",
-    ],
-)
-
 bool_flag(
     name = "enable-soplex",
     build_setting_default = False,
@@ -29,7 +19,7 @@ bool_flag(
 
 config_setting(
     name = "soplex-enabled",
-    flag_values = {":enable-soplex": "True"}
+    flag_values = {":enable-soplex": "True"},
 )
 
 var_providing_rule(
@@ -44,17 +34,25 @@ var_providing_rule(
     ],
 )
 
+cc_import(
+    name = "qsopt-ex-include",
+    hdrs = glob(["install/qsopt-ex/include/qsopt_ex/*.h"]),
+    shared_library = "install/qsopt-ex/lib/libqsopt_ex.so",
+    static_library = "install/qsopt-ex/lib/libqsopt_ex.a",
+    visibility = ["//visibility:private"],
+)
+
 cc_library(
     name = "qsopt-ex",
-    srcs = ["install/qsopt-ex/lib/libqsopt_ex.so"],
     hdrs = glob(["install/qsopt-ex/include/qsopt_ex/*.h"]),
     includes = ["install/qsopt-ex/include"],
-    copts = ["-Iinstall/qsopt-ex/include"],
     visibility = [
         "//dreal:__subpackages__",
     ],
     deps = [
+        ":qsopt-ex-include",
         "@linux_libs//:gmpxx",
+        "@linux_libs//:z",
     ],
 )
 
@@ -62,8 +60,8 @@ cc_library(
     name = "soplex",
     srcs = ["soplex/lib/libsoplex-pic.a"],
     hdrs = glob(["soplex/include/**/*.h*"]),
-    includes = ["soplex/include"],
     copts = ["-Isoplex/include"],
+    includes = ["soplex/include"],
     visibility = [
         "//dreal:__subpackages__",
     ],
@@ -158,9 +156,11 @@ pkg_tar(
 
 pkg_tar(
     name = "package_qsoptex_sharedlib",
-    srcs = ["install/qsopt-ex/lib/libqsopt_ex.so",
-            "install/qsopt-ex/lib/libqsopt_ex.so.2",
-            "install/qsopt-ex/lib/libqsopt_ex.so.2.1.0"],
+    srcs = [
+        "install/qsopt-ex/lib/libqsopt_ex.so",
+        "install/qsopt-ex/lib/libqsopt_ex.so.2",
+        "install/qsopt-ex/lib/libqsopt_ex.so.2.1.0",
+    ],
     extension = "tar.gz",
     package_dir = "lib",
     tags = ["manual"],
@@ -195,11 +195,6 @@ pkg_deb(
         "coinor-libclp-dev",
         "libbz2-dev",
         "libibex-dev",
-        #"libnlopt-dev",
-        # The followings are Build-Depends:
-        # "bison",
-        # "flex",
-        # "pkg-config",
     ],
     description = "SMT solver for nonlinear theories",
     homepage = "http://dreal.github.io",

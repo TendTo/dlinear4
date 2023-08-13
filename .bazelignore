@@ -1,3 +1,5 @@
+/bazel-*
+.cwlb
 build/
 dist/
 dreal.egg-info/
