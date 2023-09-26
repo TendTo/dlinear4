@@ -29,7 +29,7 @@ bool_flag(
 
 config_setting(
     name = "soplex-enabled",
-    flag_values = {":enable-soplex": "True"}
+    flag_values = {":enable-soplex": "True"},
 )
 
 var_providing_rule(
@@ -44,26 +44,41 @@ var_providing_rule(
     ],
 )
 
+#cc_library(
+#    name = "qsopt-ex",
+#    srcs = ["install/qsopt-ex/lib/libqsopt_ex.so"],
+#    hdrs = glob(["install/qsopt-ex/include/qsopt_ex/*.h"]),
+#    copts = ["-Iinstall/qsopt-ex/include"],
+#    includes = ["install/qsopt-ex/include"],
+#    visibility = [
+#        "//dreal:__subpackages__",
+#    ],
+#    deps = [
+#        "@linux_libs//:gmpxx",
+#    ],
+#)
+
+cc_import(
+    name = "qsopt-ex-import",
+    hdrs = glob(["install/qsopt-ex/include/qsopt_ex/*.h"]),
+    shared_library = "install/qsopt-ex/lib/libqsopt_ex.so.2",
+    deps = ["@linux_libs//:gmpxx"],
+)
+
 cc_library(
     name = "qsopt-ex",
-    srcs = ["install/qsopt-ex/lib/libqsopt_ex.so"],
     hdrs = glob(["install/qsopt-ex/include/qsopt_ex/*.h"]),
     includes = ["install/qsopt-ex/include"],
-    copts = ["-Iinstall/qsopt-ex/include"],
-    visibility = [
-        "//dreal:__subpackages__",
-    ],
-    deps = [
-        "@linux_libs//:gmpxx",
-    ],
+    visibility = ["//dreal:__subpackages__"],
+    deps = [":qsopt-ex-import"],
 )
 
 cc_library(
     name = "soplex",
     srcs = ["soplex/lib/libsoplex-pic.a"],
     hdrs = glob(["soplex/include/**/*.h*"]),
-    includes = ["soplex/include"],
     copts = ["-Isoplex/include"],
+    includes = ["soplex/include"],
     visibility = [
         "//dreal:__subpackages__",
     ],
@@ -158,9 +173,11 @@ pkg_tar(
 
 pkg_tar(
     name = "package_qsoptex_sharedlib",
-    srcs = ["install/qsopt-ex/lib/libqsopt_ex.so",
-            "install/qsopt-ex/lib/libqsopt_ex.so.2",
-            "install/qsopt-ex/lib/libqsopt_ex.so.2.1.0"],
+    srcs = [
+        "install/qsopt-ex/lib/libqsopt_ex.so",
+        "install/qsopt-ex/lib/libqsopt_ex.so.2",
+        "install/qsopt-ex/lib/libqsopt_ex.so.2.1.0",
+    ],
     extension = "tar.gz",
     package_dir = "lib",
     tags = ["manual"],

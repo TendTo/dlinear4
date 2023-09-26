@@ -10,4 +10,3 @@ var_providing_rule = rule(
     attrs = { "var_name": attr.string(),
               "var_value": attr.string() }
 )
-

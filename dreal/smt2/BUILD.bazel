@@ -1,9 +1,6 @@
 load("//third_party/com_github_google_kythe/tools/build_rules:lexyacc.bzl", "genlex", "genyacc")
 load("//third_party/com_github_robotlocomotion_drake:tools/workspace/cpplint.bzl", "cpplint")
-load(
-    "//tools:dreal.bzl",
-    "dreal_cc_library",
-)
+load("//tools:dreal.bzl", "dreal_cc_binary", "dreal_cc_library")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 package(default_visibility = ["//visibility:private"])
@@ -100,9 +97,9 @@ dreal_cc_library(
         "scanner.h",
     ],
     visibility = [
+        "//benchmark:__pkg__",
         "//dreal:__pkg__",
         "//dreal/solver:__pkg__",
-        "//benchmark:__pkg__",
     ],
     deps = [
         ":logic",
@@ -114,6 +111,18 @@ dreal_cc_library(
         "//dreal/util:scoped_unordered_map",
         "//dreal/util:string_to_interval",
         "//third_party/com_github_westes_flex:flex_lexer_h",
+    ],
+)
+
+dreal_cc_binary(
+    name = "main",
+    srcs = [
+        "main.cpp",
+    ],
+    deps = [
+        ":smt2",
+        "//dreal:qsopt-ex",
+        "//dreal/solver:config",
     ],
 )
 

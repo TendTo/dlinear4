@@ -21,12 +21,12 @@ namespace dreal {
 
 class BenchConfig {
  private:
-  ez::ezOptionParser opt_;
+  ez::ezOptionParser opt_{};
   std::string config_file_;
   std::string path_;
   std::vector<std::string> files_;
-  bool isDryRun_;
-  int timeout_;
+  bool isDryRun_{};
+  int timeout_{};
   void ConfigureParser();
   void StoreConfig();
 
